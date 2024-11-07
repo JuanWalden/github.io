@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Práctica de Atención Plena</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f7ff;
+            color: #2c3e50;
+            padding: 1rem;
+            touch-action: manipulation;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+            margin: 1rem;
+        }
+
+        h1 {
+            color: #3498db;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2980b9;
+            margin: 1rem 0;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        button {
+            padding: 1rem;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 300px;
+            align-self: center;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        #startButton {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        #startButton:hover {
+            background-color: #27ae60;
+        }
+
+        #startButton:active {
+            background-color: #27ae60;
+            transform: scale(0.98);
+        }
+
+        #awarenessButton {
+            background-color: #3498db;
+            color: white;
+            display: none;
+        }
+
+        #awarenessButton:hover {
+            background-color: #2980b9;
+        }
+
+        #awarenessButton:active {
+            background-color: #2980b9;
+            transform: scale(0.98);
+        }
+
+        .awareness-count {
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            color: #7f8c8d;
+        }
+
+        .instructions {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            color: #7f8c8d;
+            text-align: left;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .timer {
+                font-size: 2.5rem;
+            }
+
+            button {
+                font-size: 1rem;
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Práctica de Atención Plena</h1>
+        <div class="timer" id="timer">01:00</div>
+        <div class="controls">
+            <button id="startButton" type="button">Comenzar Práctica</button>
+            <button id="awarenessButton" type="button">¡Me di cuenta! 🌟</button>
+        </div>
+        <div class="awareness-count">
+            Momentos de consciencia: <span id="awarenessCounter">0</span>
+        </div>
+        <div class="instructions">
+            <p><strong>Instrucciones:</strong></p>
+            <ol>
+                <li>Martín, siéntate en una posición cómoda y presiona "Comenzar Práctica".</li>
+                <li>Centra tu atención en tu respiración, en cómo entra y sale el aire al respirar.</li>
+                <li>Cada vez que notes que te distraes y te des cuenta, presiona el botón "¡Me di cuenta!"</li>
+                <li>Recuerda: Practica varias veces al día.</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const timerDisplay = document.getElementById('timer');
+            const startButton = document.getElementById('startButton');
+            const awarenessButton = document.getElementById('awarenessButton');
+            const awarenessCounter = document.getElementById('awarenessCounter');
+
+            let timeLeft = 60;
+            let timerId = null;
+            let awarenessCount = 0;
+
+            // Prevenir el comportamiento de doble tap en iOS
+            document.addEventListener('touchstart', function(event) {
+                if (event.touches.length > 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+
+            // Deshabilitar zoom al doble tap
+            document.addEventListener('dblclick', function(event) {
+                event.preventDefault();
+            }, { passive: false });
+
+            function startTimer() {
+                if (timerId) {
+                    // Reset timer
+                    clearInterval(timerId);
+                    timerId = null;
+                    timeLeft = 60;
+                    awarenessCount = 0;
+                    awarenessCounter.textContent = '0';
+                    startButton.textContent = 'Comenzar Práctica';
+                    awarenessButton.style.display = 'none';
+                    timerDisplay.textContent = '01:00';
+                } else {
+                    // Start timer
+                    startButton.textContent = 'Reiniciar';
+                    awarenessButton.style.display = 'block';
+                    timeLeft = 60;
+                    
+                    timerId = setInterval(function() {
+                        timeLeft--;
+                        
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        
+                        timerDisplay.textContent = 
+                            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        
+                        if (timeLeft <= 0) {
+                            clearInterval(timerId);
+                            timerId = null;
+                            startButton.textContent = 'Comenzar Práctica';
+                            awarenessButton.style.display = 'none';
+                            alert('¡Práctica completada! Registraste ' + awarenessCount + ' momentos de consciencia.');
+                        }
+                    }, 1000);
+                }
+            }
+
+            function incrementAwareness() {
+                awarenessCount++;
+                awarenessCounter.textContent = awarenessCount;
+            }
+
+            // Agregar eventos tanto para click como para touch
+            startButton.addEventListener('click', startTimer);
+            startButton.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                startTimer();
+            });
+
+            awarenessButton.addEventListener('click', incrementAwareness);
+            awarenessButton.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                incrementAwareness();
+            });
+        });
+    </script>
+</body>
+</html>
