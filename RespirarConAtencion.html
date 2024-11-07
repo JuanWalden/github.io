@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica de Atención Plena</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            text-align: center;
+            background-color: #f0f7ff;
+        }
+        
+        .timer {
+            font-size: 72px;
+            margin: 20px 0;
+            color: #2196F3;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            background-color: white;
+        }
+
+        #startButton {
+            width: 100%;
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        
+        #awarenessButton {
+            position: fixed;
+            bottom: 40px;
+            left: 5%;
+            width: 90%;
+            height: 200px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 24px;
+            display: none;
+            transition: background-color 0.1s;
+            z-index: 1000;
+        }
+
+        #awarenessButton:active {
+            background-color: #1976d2;
+        }
+
+        .counter {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .history {
+            margin-top: 30px;
+            text-align: left;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+        }
+
+        .stats {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Práctica de Atención Plena</h1>
+        
+        <select id="timeSelect">
+            <option value="60">1 minuto</option>
+            <option value="120">2 minutos</option>
+            <option value="180">3 minutos</option>
+            <option value="240">4 minutos</option>
+            <option value="300">5 minutos</option>
+            <option value="600">10 minutos</option>
+        </select>
+
+        <div class="timer" id="timer">01:00</div>
+        <button id="startButton">Comenzar Práctica</button>
+        <div class="counter">
+            Momentos de consciencia: <span id="awarenessCounter">0</span>
+        </div>
+
+        <div class="history">
+            <div class="stats">
+                <h3>Estadísticas Generales</h3>
+                <p>Total de sesiones: <span id="totalSessions">0</span></p>
+                <p>Media de momentos: <span id="averageMoments">0</span></p>
+                <p>Tiempo total de práctica: <span id="totalTime">0</span> minutos</p>
+            </div>
+            <h3>Historial de Sesiones</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Duración</th>
+                        <th>Momentos</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <button id="awarenessButton">¡Me di cuenta! 🌟</button>
+
+    <script>
+        const timer = document.getElementById('timer');
+        const startButton = document.getElementById('startButton');
+        const awarenessButton = document.getElementById('awarenessButton');
+        const awarenessCounter = document.getElementById('awarenessCounter');
+        const timeSelect = document.getElementById('timeSelect');
+        let seconds = 60;
+        let countdownInterval;
+        let count = 0;
+        let sessions = [];
+
+        // Cargar sesiones guardadas al iniciar
+        function loadSessions() {
+            const savedSessions = localStorage.getItem('mindfulnessSessions');
+            if (savedSessions) {
+                sessions = JSON.parse(savedSessions);
+                updateHistory();
+            }
+        }
+
+        // Guardar sesión actual
+        function saveSession(duration, moments) {
+            const session = {
+                date: new Date(),
+                duration: duration,
+                moments: moments
+            };
+            sessions.push(session);
+            localStorage.setItem('mindfulnessSessions', JSON.stringify(sessions));
+            updateHistory();
+        }
+
+        // Actualizar historial y estadísticas
+        function updateHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+            
+            // Mostrar las últimas 10 sesiones
+            sessions.slice().reverse().slice(0, 10).forEach(session => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = new Date(session.date).toLocaleDateString();
+                row.insertCell(1).textContent = Math.floor(session.duration / 60) + ' minutos';
+                row.insertCell(2).textContent = session.moments;
+            });
+
+            // Actualizar estadísticas
+            document.getElementById('totalSessions').textContent = sessions.length;
+            
+            const avgMoments = sessions.length > 0 
+                ? (sessions.reduce((sum, s) => sum + s.moments, 0) / sessions.length).toFixed(1)
+                : 0;
+            document.getElementById('averageMoments').textContent = avgMoments;
+            
+            const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0) / 60;
+            document.getElementById('totalTime').textContent = totalMinutes.toFixed(0);
+        }
+
+        // Actualizar temporizador cuando se cambia el tiempo
+        timeSelect.onchange = function() {
+            seconds = parseInt(this.value);
+            updateTimerDisplay();
+        };
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timer.textContent = 
+                (mins < 10 ? '0' : '') + mins + ':' + 
+                (secs < 10 ? '0' : '') + secs;
+        }
+
+        startButton.onclick = function() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                seconds = parseInt(timeSelect.value);
+                updateTimerDisplay();
+                startButton.textContent = 'Comenzar Práctica';
+                awarenessButton.style.display = 'none';
+                count = 0;
+                awarenessCounter.textContent = '0';
+            } else {
+                const duration = parseInt(timeSelect.value);
+                startButton.textContent = 'Reiniciar';
+                awarenessButton.style.display = 'block';
+                
+                countdownInterval = setInterval(function() {
+                    seconds--;
+                    updateTimerDisplay();
+                    
+                    if (seconds <= 0) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                        saveSession(duration, count);
+                        alert('¡Práctica completada!\nRegistraste ' + count + ' momentos de consciencia.');
+                        seconds = parseInt(timeSelect.value);
+                        updateTimerDisplay();
+                        startButton.textContent = 'Comenzar Práctica';
+                        awarenessButton.style.display = 'none';
+                        count = 0;
+                        awarenessCounter.textContent = '0';
+                    }
+                }, 1000);
+            }
+        };
+
+        awarenessButton.onclick = function() {
+            count++;
+            awarenessCounter.textContent = count;
+            this.style.backgroundColor = '#1976d2';
+            setTimeout(() => this.style.backgroundColor = '#2196F3', 100);
+        };
+
+        // Cargar sesiones al iniciar
+        loadSessions();
+    </script>
+</body>
+</html>
